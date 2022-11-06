@@ -124,11 +124,13 @@ public class Robot extends TimedRobot {
   public void disabledPeriodic() {
     // Update auto modes
     mAutoModeSelector.updateModeCreator();
+    m_hopper.setAllianceColor();
   }
 
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
+    //m_hopper.configureMotors(); //110522 
     DrivetrainSubsystem.zeroGyroscope(); //do not remove, very important
     m_autonomousCommand = m_robotContainer.getAutonomousCommand(); //uncomment to run command auto
  // startTime = Timer.getFPGATimestamp();
@@ -156,6 +158,7 @@ public class Robot extends TimedRobot {
       m_autonomousCommand.cancel();
     }
 
+    m_hopper.setAllianceColor();
     m_robotContainer.m_drivetrainSubsystem.resetEverything();
   }
 
@@ -178,7 +181,15 @@ public class Robot extends TimedRobot {
       m_hopper.stopDaHopper();
       m_shoot.stopShooter();
       //m_shoot.noTrack();
-    }
+    } else if (m_driveController.getRightTriggerAxis()>0.7)m_shoot.autoFire();
+      else if (m_driveController.getRightTriggerAxis()<0.7 && m_driveController.getRightTriggerAxis()>0.15)m_shoot.stopShooter(); // THIS IS A JANK FIX!! essentially turns it off on a soft release - BVN 
+    
+    if(m_driveController.getStartButtonPressed())m_hopper.weAreRed();
+    
+    if(m_driveController.getRawButtonPressed(7))m_hopper.weAreBlue();
+    
+
+
     
     if(m_operatorController.getLeftTriggerAxis() > 0.7){ //If we're climbing, then nothing else can be pressed
     m_super.climbControl(0);
@@ -213,7 +224,8 @@ public class Robot extends TimedRobot {
       m_intake.retractIntake();
     } else if(m_operatorController.getRightBumper()) {
       m_shoot.wallShootPrepare();
-      if (m_operatorController.getRightTriggerAxis() > 0.5);
+      SmartDashboard.putNumber("key", m_operatorController.getRightTriggerAxis());
+        if (m_operatorController.getRightTriggerAxis() > 0.9) m_shoot.wallShot();
     } else if (m_operatorController.getRightBumperReleased()) {
       m_shoot.stopShooter();
       m_hopper.stopDaHopper();

@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.StatusFrameEnhanced;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -14,7 +15,10 @@ import edu.wpi.first.wpilibj.Timer;
 public class HopperSubsystem extends SubsystemBase{
     
     private static final TalonFX m_tower = new TalonFX(Constants.HOPPER_MOTOR);
+
     private static final TalonFX m_centering = new TalonFX(Constants.BALL_CENTERING_MOTOR);
+
+
     private final static I2C.Port colorPort = I2C.Port.kOnboard;
     private static final ColorSensorV3 m_colorSensor = new ColorSensorV3(colorPort);
     private static String allianceColor = DriverStation.getAlliance().toString();
@@ -27,12 +31,27 @@ public class HopperSubsystem extends SubsystemBase{
     private static boolean ballInCircCorrect = true;
     public final double hSpeed = 0.375; 
 
+    public void configureMotors(){
+        m_tower.setStatusFramePeriod(StatusFrameEnhanced.Status_1_General, 50);
+        m_tower.setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, 50);
+        m_tower.setStatusFramePeriod(StatusFrameEnhanced.Status_Brushless_Current, 200);
+        //m_tower.setStatusFramePeriod(, 40);
+    }
+
     public void gogoBallCenter(double power){
         m_centering.set(ControlMode.PercentOutput, -power);
     }
 
     public void gogoHopper(double speed){
         m_tower.set(ControlMode.PercentOutput, speed);
+    }
+
+    public void setAllianceColor(
+
+    ) {
+        allianceColor = DriverStation.getAlliance().toString();
+        
+        SmartDashboard.putString("alliance", allianceColor);
     }
 
     public void stopDaHopper() {
@@ -46,7 +65,7 @@ public class HopperSubsystem extends SubsystemBase{
     }
 
     public boolean ballInUpper() {
-        return m_topSensor.get();
+        return !m_topSensor.get();
     }
 
     public boolean ballInLower() {
@@ -78,7 +97,7 @@ public class HopperSubsystem extends SubsystemBase{
     
     public void intakingLoop() {
         intaking = true;
-            if (ballInLower() && ballInCircCorrect) { //make ballInLower
+            if (ballInUpper() && ballInCircCorrect) { //make ballInUpper && ballInCircCorrect
                 stopDaHopper();
                 m_shoot.stopShooter();
             } else {
@@ -97,7 +116,7 @@ public class HopperSubsystem extends SubsystemBase{
                 m_shoot.stopShooter();
                 intaking = false;
             } else if (!rightBall() && !ballInUpper() && ballInLower()) {
-                ballInCircCorrect = true; //make false
+                ballInCircCorrect = false; //make false
             } else if (rightBall() && ballInUpper() && !ballInCircCorrect) {
                 ballInCircCorrect = true;
             } else if (rightBall() && !ballInUpper()) {
@@ -105,11 +124,15 @@ public class HopperSubsystem extends SubsystemBase{
             } else if (!rightBall() && ballInUpper() && ballInLower()) {
                 m_intake.setIntake(-.75);
                 gogoBallCenter(-.5);
-                gogoHopper(-.375);
-                Timer.delay(.1);
-                stopDaHopper();
-                Timer.delay(.3);
             }
+    }
+
+    public void weAreRed(){
+        allianceColor = "Red";
+    }
+
+    public void weAreBlue(){
+        allianceColor = "Blue";
     }
 
     public void reverseStuff() {

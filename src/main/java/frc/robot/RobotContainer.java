@@ -56,9 +56,10 @@ public class RobotContainer {
             m_drivetrainSubsystem,
             () -> -modifyAxis(m_controller.getLeftY()) * DrivetrainSubsystem.MAX_VELOCITY_METERS_PER_SECOND,
             () -> modifyAxis(m_controller.getLeftX()) * DrivetrainSubsystem.MAX_VELOCITY_METERS_PER_SECOND,
-            () -> modifyAxis(m_controller.getRightX() * 0.75) * DrivetrainSubsystem.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND
+            () -> modifyAxis(m_controller.getRightX() * 0.75 + m_shoot.yaw/14) * DrivetrainSubsystem.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND
       ));
       //SmartDashboard.putNumber("rotationControllerSpoof", m_shoot.yaw);
+      //yaw gain was 20
   }
     // Configure the button bindings
 
@@ -122,7 +123,7 @@ public class RobotContainer {
           m_drivetrainSubsystem);
           
           return new SequentialCommandGroup(
-            new InstantCommand(() -> m_shoot.autonShoot()),
+            new InstantCommand(() -> m_shoot.autonShoot(6.0)),
             new InstantCommand(() -> m_drivetrainSubsystem.resetOdometry(shootDriveTrajectory.getInitialPose())),
             swerveControllerCommandShootDrive);
 
@@ -130,38 +131,34 @@ public class RobotContainer {
     
     else if(mAutoModeSelector.returnAutoMode().toString().equals("RIGHT_SIDE_3_BALL")) {
 
-        //shoot
-
       Trajectory trajectory = TrajectoryGenerator.generateTrajectory( //drives to edge of tarmac
       new Pose2d(0.0, 0.0, new Rotation2d(0.0)),
       List.of(
-        new Translation2d(-0.001, 0.001)),
-      new Pose2d(-0.002, 0.002, Rotation2d.fromDegrees(0.0)), //rotation to paralell intake with outer tarmac line
+        new Translation2d(-0.1, 0.01)),
+      new Pose2d(-0.2, 0.02, Rotation2d.fromDegrees(0.0)), //rotation to paralell intake with outer tarmac line
       trajectoryConfig);      
     
     //intake down
-
+  
       Trajectory trajectory1 = TrajectoryGenerator.generateTrajectory( //drives to 3rd ball
         new Pose2d(0.0, 0.0, new Rotation2d(0.0)),
         List.of(
-          new Translation2d(-1.42, 0.58)), //-0.5, 0.035
-        new Pose2d(-2.1, 0.65, Rotation2d.fromDegrees(158.5)), 
+          new Translation2d(-0.7, 0.48)), //-0.5, 0.035
+        new Pose2d(-2.2, 1.5, Rotation2d.fromDegrees(179.0)), 
         trajectoryConfig);
-
-        Trajectory trajectory2 = TrajectoryGenerator.generateTrajectory( //drives to edge of tarmac
-      new Pose2d(0.0, 0.0, new Rotation2d(0.0)),
+  
+        Trajectory trajectory2 = TrajectoryGenerator.generateTrajectory( 
+      new Pose2d(-2.2, 1.5, new Rotation2d(179.0)),
       List.of(
-        new Translation2d(0.001, -0.001)),
-      new Pose2d(0.002, -0.002, Rotation2d.fromDegrees(0.0)), //rotation to paralell intake with outer tarmac line
+        new Translation2d(-0.001, -0.001)), //(0.7, 0.48)
+      new Pose2d(0.002, 0.002, Rotation2d.fromDegrees(0.0)), //2.4, 0.85
       trajectoryConfig);      
-    
-    //intake down
-
-      Trajectory trajectory3 = TrajectoryGenerator.generateTrajectory( //drives to 3rd ball
+  
+      Trajectory trajectory3 = TrajectoryGenerator.generateTrajectory(
         new Pose2d(0.0, 0.0, new Rotation2d(0.0)),
         List.of(
-          new Translation2d(1.42, -0.58)), //-0.5, 0.035
-        new Pose2d(2.1, -0.65, Rotation2d.fromDegrees(-158.5)), 
+          new Translation2d(0.1, -0.01)), //-0.5, 0.035
+        new Pose2d(0.02, -0.02, Rotation2d.fromDegrees(0.0)), 
         trajectoryConfig);
         
       SwerveControllerCommand swerveControllerCommand = new SwerveControllerCommand(
@@ -173,7 +170,7 @@ public class RobotContainer {
               thetaController,
               m_drivetrainSubsystem::setModuleStates,
               m_drivetrainSubsystem);
-
+  
       SwerveControllerCommand swerveControllerCommand1 = new SwerveControllerCommand(
               trajectory1,
               m_drivetrainSubsystem::getPose,
@@ -203,25 +200,24 @@ public class RobotContainer {
                 thetaController,
                 m_drivetrainSubsystem::setModuleStates,
                 m_drivetrainSubsystem);
-
+  
      return new SequentialCommandGroup(
-      new InstantCommand(() -> m_shoot.autonShoot()),
-            new InstantCommand(() -> m_drivetrainSubsystem.resetOdometry(trajectory.getInitialPose())),
-             swerveControllerCommand,
-            new InstantCommand(() -> m_drivetrainSubsystem.resetOdometry(trajectory1.getInitialPose())),
-             swerveControllerCommand1,
-             new InstantCommand(() -> m_intake.setIntake(.75)),
-             new InstantCommand(() -> m_hopper.gogoHopper(.5)),
-            new InstantCommand(() -> Timer.delay(.3)),
-            new InstantCommand(() -> m_hopper.stopDaHopper()),
-             new InstantCommand(() -> m_intake.retractIntake()),
-             new InstantCommand(() -> m_drivetrainSubsystem.resetOdometry(trajectory2.getInitialPose())),
-             swerveControllerCommand2,
-             new InstantCommand(() -> m_drivetrainSubsystem.resetOdometry(trajectory3.getInitialPose())),
-             swerveControllerCommand3,
-             new InstantCommand(() -> m_shoot.autonShoot()),
-            new InstantCommand(() -> m_drivetrainSubsystem.stopModules()));   
-            // return new InstantCommand();
+      new InstantCommand(() -> m_shoot.autonShoot(3)),
+      new InstantCommand(() -> m_drivetrainSubsystem.resetOdometry(trajectory.getInitialPose())),
+          swerveControllerCommand,
+          new InstantCommand(() -> m_intake.setIntake(.75)),
+      new InstantCommand(() -> m_drivetrainSubsystem.resetOdometry(trajectory1.getInitialPose())),
+          swerveControllerCommand1,
+          new InstantCommand(() -> m_hopper.gogoHopper(.375)),
+          new InstantCommand(() -> Timer.delay(0.5)),
+          new InstantCommand(() -> m_hopper.stopDaHopper()),
+          new InstantCommand(() -> m_intake.retractIntake()),
+      new InstantCommand(() -> m_drivetrainSubsystem.resetOdometry(trajectory2.getInitialPose())),
+          swerveControllerCommand2,
+      //new InstantCommand(() -> m_drivetrainSubsystem.resetOdometry(trajectory3.getInitialPose())),
+          //swerveControllerCommand3,
+          new InstantCommand(() -> m_shoot.autonShoot(6)),
+      new InstantCommand(() -> m_drivetrainSubsystem.stopModules())); 
     } else if(mAutoModeSelector.returnAutoMode().toString().equals("LEFT_SIDE_3_BALL")) {
 
       //10-26-22 OWEN N.
@@ -239,17 +235,17 @@ public class RobotContainer {
       new Pose2d(0.0, 0.0, new Rotation2d(0.0)),
       List.of(
         new Translation2d(-0.7, -0.48)), //-0.5, 0.035
-      new Pose2d(-2.7, -1.0, Rotation2d.fromDegrees(179.0)), 
+      new Pose2d(-1, -.5, Rotation2d.fromDegrees(179.0)), 
       trajectoryConfig);
 
       Trajectory trajectory2 = TrajectoryGenerator.generateTrajectory( 
-    new Pose2d(-2.7, -1.0, new Rotation2d(179.0)),
+    new Pose2d(0.0, 0.0, new Rotation2d(179 * Math.PI/180)), 
     List.of(
-      new Translation2d(-1.0, -.4)), //(0.7, 0.48)
-    new Pose2d(0.001, 0.001, Rotation2d.fromDegrees(0.0)), //2.4, 0.85
+      new Translation2d(0.2, 0.2)), //(0.7, 0.48)
+    new Pose2d(0.3, 0.3, Rotation2d.fromDegrees(0.0)), //2.4, 0.85
     trajectoryConfig);      
 
-    Trajectory trajectory3 = TrajectoryGenerator.generateTrajectory(
+    Trajectory trajectory3 = TrajectoryGenerator.generateTrajectory( //DOES NOTHING
       new Pose2d(0.0, 0.0, new Rotation2d(0.0)),
       List.of(
         new Translation2d(0.1, -0.01)), //-0.5, 0.035
@@ -297,7 +293,7 @@ public class RobotContainer {
               m_drivetrainSubsystem);
 
    return new SequentialCommandGroup(
-    new InstantCommand(() -> m_shoot.autonShoot()),
+    new InstantCommand(() -> m_shoot.autonShoot(3.0)),
     new InstantCommand(() -> m_drivetrainSubsystem.resetOdometry(trajectory.getInitialPose())),
         swerveControllerCommand,
         new InstantCommand(() -> m_intake.setIntake(.75)),
@@ -311,7 +307,7 @@ public class RobotContainer {
         swerveControllerCommand2,
     //new InstantCommand(() -> m_drivetrainSubsystem.resetOdometry(trajectory3.getInitialPose())),
         //swerveControllerCommand3,
-        new InstantCommand(() -> m_shoot.autonShoot()),
+        new InstantCommand(() -> m_shoot.autonShoot(8.0)),
     new InstantCommand(() -> m_drivetrainSubsystem.stopModules()));   
     
   }  else if(mAutoModeSelector.returnAutoMode().toString().equals("RIGHT_SIDE_4_BALL")) {
@@ -322,7 +318,7 @@ public class RobotContainer {
         new Pose2d(0.0, 0.0, new Rotation2d(0.0)),
         List.of(
           new Translation2d(-0.001, 0.001)),
-        new Pose2d(-0.002, 0.002, Rotation2d.fromDegrees(0.0)), //rotation to paralell intake with outer tarmac line
+        new Pose2d(-0.002, 0.002, Rotation2d.fromDegrees(0.0)), //rotation to parallel intake with outer tarmac line
         trajectoryConfig);      
       
       //intake down
@@ -407,7 +403,7 @@ public class RobotContainer {
             m_drivetrainSubsystem); 
      
         return new SequentialCommandGroup(
-          new InstantCommand(() -> m_shoot.autonShoot()),
+          new InstantCommand(() -> m_shoot.autonShoot(2.5)),
              new InstantCommand(() -> m_drivetrainSubsystem.resetOdometry(rightSide1.getInitialPose())),
               rightSideMulti1,
              new InstantCommand(() -> m_drivetrainSubsystem.resetOdometry(rightSide2.getInitialPose())),
@@ -422,7 +418,7 @@ public class RobotContainer {
             new InstantCommand(() -> m_intake.retractIntake()),
              new InstantCommand(() -> m_drivetrainSubsystem.resetOdometry(rightSide4.getInitialPose())),
              rightSideMulti4,
-             new InstantCommand(() -> m_shoot.autonShoot()),
+             new InstantCommand(() -> m_shoot.autonShoot(6.0)),
              new InstantCommand(() -> m_drivetrainSubsystem.resetOdometry(rightSide4.getInitialPose())),
              rightSideMulti5,
              new InstantCommand(() -> m_drivetrainSubsystem.stopModules()));   
@@ -449,7 +445,7 @@ public class RobotContainer {
     return new SequentialCommandGroup();
     } else if(mAutoModeSelector.returnAutoMode().toString().equals("JUST_SHOOT")) {
       return new SequentialCommandGroup(
-        new InstantCommand(() -> m_shoot.autonShoot()));
+        new InstantCommand(() -> m_shoot.autonLimeShoot()));
     } else {
        return new InstantCommand();
      }
