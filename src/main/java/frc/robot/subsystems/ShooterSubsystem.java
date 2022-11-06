@@ -132,10 +132,10 @@ public class ShooterSubsystem extends SubsystemBase {
 
     public void autonLimeShoot() {
         double autoTimer = Timer.getFPGATimestamp();
-        while(Timer.getFPGATimestamp() - autoTimer < 5.0) autoFire();
+        while(Timer.getFPGATimestamp() - autoTimer < 1.0) autoFire();
 
-        m_hopper.stopDaHopper();
-        stopShooter();
+        //m_hopper.stopDaHopper();
+        //stopShooter();
     }
     public void stopShooter() {
         camera.setLED(VisionLEDMode.kOff);

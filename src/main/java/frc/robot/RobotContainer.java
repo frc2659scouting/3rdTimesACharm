@@ -234,15 +234,16 @@ public class RobotContainer {
     Trajectory trajectory1 = TrajectoryGenerator.generateTrajectory( //drives to 3rd ball
       new Pose2d(0.0, 0.0, new Rotation2d(0.0)),
       List.of(
-        new Translation2d(-0.7, -0.48)), //-0.5, 0.035
-      new Pose2d(-1, -.5, Rotation2d.fromDegrees(179.0)), 
+        new Translation2d(-0.6, 0), //-0.7, -0.48
+        new Translation2d(-0.79, -.2)),
+      new Pose2d(-0.8, -1, Rotation2d.fromDegrees(0.0)), //179, -1, -.5
       trajectoryConfig);
 
       Trajectory trajectory2 = TrajectoryGenerator.generateTrajectory( 
-    new Pose2d(0.0, 0.0, new Rotation2d(179 * Math.PI/180)), 
+    new Pose2d(0.0, 0.0, new Rotation2d(0.0)), 
     List.of(
-      new Translation2d(0.2, 0.2)), //(0.7, 0.48)
-    new Pose2d(0.3, 0.3, Rotation2d.fromDegrees(0.0)), //2.4, 0.85
+      new Translation2d(.5, 0.1)), //(0.7, 0.48), 0.2, 0.2
+    new Pose2d(1.5, 1, Rotation2d.fromDegrees(0.0)), //2.4, 0.85
     trajectoryConfig);      
 
     Trajectory trajectory3 = TrajectoryGenerator.generateTrajectory( //DOES NOTHING
@@ -293,21 +294,22 @@ public class RobotContainer {
               m_drivetrainSubsystem);
 
    return new SequentialCommandGroup(
-    new InstantCommand(() -> m_shoot.autonShoot(3.0)),
-    new InstantCommand(() -> m_drivetrainSubsystem.resetOdometry(trajectory.getInitialPose())),
-        swerveControllerCommand,
-        new InstantCommand(() -> m_intake.setIntake(.75)),
+    new InstantCommand(() -> m_shoot.autonShoot(2.5)),
+    //new InstantCommand(() -> m_drivetrainSubsystem.resetOdometry(trajectory.getInitialPose())),
+        //swerveControllerCommand,
     new InstantCommand(() -> m_drivetrainSubsystem.resetOdometry(trajectory1.getInitialPose())),
         swerveControllerCommand1,
-        new InstantCommand(() -> m_hopper.gogoHopper(.375)),
-        new InstantCommand(() -> Timer.delay(0.5)),
-        new InstantCommand(() -> m_hopper.stopDaHopper()),
-        new InstantCommand(() -> m_intake.retractIntake()),
+        new InstantCommand(() -> m_intake.setIntake(.75)),
     new InstantCommand(() -> m_drivetrainSubsystem.resetOdometry(trajectory2.getInitialPose())),
         swerveControllerCommand2,
+        //new InstantCommand(() -> m_hopper.gogoHopper(.375)),
+        //new InstantCommand(() -> Timer.delay(0.5)),
+        new InstantCommand(() -> m_hopper.stopDaHopper()),
+        new InstantCommand(() -> m_intake.retractIntake()),
     //new InstantCommand(() -> m_drivetrainSubsystem.resetOdometry(trajectory3.getInitialPose())),
         //swerveControllerCommand3,
-        new InstantCommand(() -> m_shoot.autonShoot(8.0)),
+        new InstantCommand(() -> m_shoot.autonLimeShoot()),
+        new InstantCommand(() -> m_hopper.gogoHopper(.375)),
     new InstantCommand(() -> m_drivetrainSubsystem.stopModules()));   
     
   }  else if(mAutoModeSelector.returnAutoMode().toString().equals("RIGHT_SIDE_4_BALL")) {
